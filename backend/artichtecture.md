@@ -1,21 +1,45 @@
-POST   /api/auth/register
-POST   /api/auth/login
-POST   /api/auth/refresh
-POST   /api/auth/logout
-POST   /api/auth/verify-email
-POST   /api/auth/forgot-password
-POST   /api/auth/reset-password
+# API Endpoints
 
-GET    /api/wallet/balance
-POST   /api/wallet/deposit          (or webhook from payment provider)
-POST   /api/wallet/withdraw
-GET    /api/wallet/transactions
+## Authentication
 
-POST   /api/game/spin               (body: betAmount, clientSeed?)
-POST   /api/game/buy-feature        (body: betAmount)
-GET    /api/game/round/:roundId     (round detail incl. tumble history)
-GET    /api/game/verify/:roundId    (provably fair verification)
-POST   /api/game/seed/rotate        (rotate server seed, reveal previous)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/auth/register | Register a new user |
+| POST | /api/auth/login | Login user and return tokens |
+| POST | /api/auth/refresh | Refresh access token |
+| POST | /api/auth/logout | Logout user and invalidate session |
+| POST | /api/auth/verify-email | Verify email address |
+| POST | /api/auth/forgot-password | Send password reset link |
+| POST | /api/auth/reset-password | Reset password using token |
 
-GET    /api/admin/rtp
-GET    /api/admin/audit-log
+---
+
+## Wallet
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/wallet/balance | Get current wallet balance |
+| POST | /api/wallet/deposit | Deposit funds (or payment webhook) |
+| POST | /api/wallet/withdraw | Withdraw funds from wallet |
+| GET | /api/wallet/transactions | Get transaction history |
+
+---
+
+## Game
+
+| Method | Endpoint | Description | Body |
+|--------|----------|-------------|------|
+| POST | /api/game/spin | Start a spin round | betAmount, clientSeed? |
+| POST | /api/game/buy-feature | Buy bonus feature | betAmount |
+| GET | /api/game/round/:roundId | Get round details with history | — |
+| GET | /api/game/verify/:roundId | Verify provably fair result | — |
+| POST | /api/game/seed/rotate | Rotate server seed | — |
+
+---
+
+## Admin
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/admin/rtp | Get RTP statistics |
+| GET | /api/admin/audit-log | Get system audit logs |
