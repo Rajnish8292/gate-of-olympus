@@ -56,7 +56,7 @@ const gameConfig = {
     },
 
     freespin: {
-        base : {spin : 15, count : 5}, // if 3 or more scatter appears, then give 15 free spin with 5x multiplier
+        base : {spin : 15, count : 4}, // if 3 or more scatter appears, then give 15 free spin with 5x multiplier
         additional: {spin: 4, count: 3}, // if 3 or more scatter appears in free spin, then give 4 additional free spin with 3x multiplier
     }, 
 

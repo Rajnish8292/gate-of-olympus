@@ -119,13 +119,65 @@ class BetEngine {
 
     }
 
+
+    async handleFreeSpinUpdate(userId, betAmount, freeSpinStatus, totalMultiplierPayout, winAmount,shouldStartBaseFreeSpin, shouldAdditionalFreeSpin) {
+            // handle update for free spin data if it started
+            let finalData = null;
+            if(freeSpinStatus?.hasFreeSpinStarted) {
+                
+                const updatedfreeSpinData = {
+                    ...freeSpinStatus,
+                    freeSpinTotalCount : Number(freeSpinStatus.freeSpinTotalCount) + ((shouldAdditionalFreeSpin) ? this.gameConfig.freespin.additiona.spin : 0),
+                    freeSpinCount : Number(freeSpinStatus.freeSpinCount) + 1,
+                    totalWinAmount : Number(freeSpinStatus.freeSpinCount) + winAmount,
+                    accumulatedMultiplier: Number(freeSpinStatus.accumulatedMultiplier) + totalMultiplierPayout,
+                    freeSpinCompleted : Number(freeSpinStatus.freeSpinCount + 1) >= Number(freeSpinStatus.freeSpinTotalCount),
+
+                }
+
+                finalData = updatedfreeSpinData
+
+                // if free
+                if(updatedfreeSpinData.freeSpinCount >= freeSpinStatus.freeSpinTotalCount) {
+                    await this.databaseManager.deleteFreeSpinStatus(userId)
+                } else {
+                    await this.databaseManager.setFreeSpinData(updatedfreeSpinData)
+                }
+            } else {
+
+                // if free spin is not already started and we get a base free spin then start the free spin
+                if(shouldStartBaseFreeSpin) {
+                    const freeSpinData = {
+                        userId,
+                        betAmount,
+                        freeSpinCount : 0,
+                        freeSpinTotalCount : this.gameConfig.freespin.base.spin,
+                        totalWinAmount : 0,
+                        accumulatedMultiplier : 0,
+                        freeSpinCompleted : false
+                    }
+
+                    await this.databaseManager(freeSpinData);
+                }
+
+            }
+
+            // we only gonna return updated free spin data not the inital free spin data
+            return finalData
+    }
+
     
 
     async startBet({ userId, betAmount, currency, clientSeed, serverSeed, nonce }) {
         
         const roundId = generateRoundId();
         const transactionId = generateTransactionId();
-        const betAmountNum = Number(betAmount);
+        let betAmountNum = Number(betAmount);
+
+        const freeSpinStatus = await this.databaseManager.getFreeSpinStatus( userId );
+
+        // if free spin is active, then we need to use the bet amount from the free spin status instead of the bet amount sent by the user
+        betAmountNum = (freeSpinStatus?.hasFreeSpinStarted) ? Number(freeSpinStatus.betAmount) : betAmountNum;
 
         const [currentUserBalance] = await Promise.all([
             this.databaseManager.getBalance({ userId }),
@@ -135,21 +187,28 @@ class BetEngine {
 
         try {
 
+            // if free spin is not active, then we need to deduct the bet amount from the user's balance
             await Promise.all([
                 this.databaseManager.createTransaction({ userId, betAmount, roundId, transactionId }),
-                this.databaseManager.updateBalance({ userId, balance: (currentUserBalance - betAmountNum).toFixed(2) }),
+                (freeSpinStatus?.hasFreeSpinStarted) ? null : this.databaseManager.updateBalance({ userId, balance: (currentUserBalance - betAmountNum).toFixed(2) }),
             ]);
 
 
-
-            const { boardState, tumbles, multiplierPayoutStack } = await this.gameEngine.spinReel({ userId, clientSeed, serverSeed, nonce });
-
+            const { boardState, tumbles, multiplierPayoutStack, shouldStartFreeSpin } = await this.gameEngine.spinReel({ userId, clientSeed, serverSeed, nonce });
             
             const payout = this.organizeRespone({ boardState, tumbles, multiplierPayoutStack });
-            const winAmount = payout.totalWinMultiplier * betAmountNum;
-            const newBalance = parseFloat((currentUserBalance - betAmountNum + winAmount).toFixed(2));
+            
+            // if free spin is active, then we need to update the free spin status with the new accumulated multiplier and total win amount
+            const freeSpinMultiplier = (freeSpinStatus.hasFreeSpinStarted) ? (freeSpinStatus.accumulatedMultiplier + payout.totalMultiplierPayout) : 1;
+
+            const winAmount = payout.totalWinMultiplier * betAmountNum * freeSpinMultiplier;
+            const balanceAfterBetAmountDeduction = await this.databaseManager.getBalance({ userId });
+
+            const newBalance = parseFloat((balanceAfterBetAmountDeduction + winAmount).toFixed(2));
 
 
+
+            const freeSpinData = await this.handleFreeSpinUpdate(userId, betAmountNum, freeSpinStatus, payout.totalMultiplierPayout, winAmount, shouldStartFreeSpin.base, shouldStartFreeSpin.additional);
 
             await Promise.all([
                 this.databaseManager.updateBalance({ userId, balance: newBalance }),
@@ -159,12 +218,17 @@ class BetEngine {
 
             return {
                 message: "bet completed.",
-                betAmount,
-                ...payout,
-                winAmount,
-                newBalance,
-                roundId,
-                transactionId
+                betInfo : {
+                    betAmount,
+                    winAmount,
+                    newBalance,
+                    roundId,
+                    transactionId, 
+                },
+                
+                boardInfo : {...payout},
+                freeSpin : freeSpinData
+                
             };
         } finally {
             await this.databaseManager.unlockBet(userId);

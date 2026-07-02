@@ -111,6 +111,29 @@ log(type, userId, data = {}) {
         return (redisReq) ? JSON.parse(redisReq).map : null
     }
 
+    async getFreeSpinStatus(userId) {
+        let redisRed = await redisClient.get(`freespin:player:${userId}`);
+        return JSON.parse(redisRed);
+    }
+
+    async setFreeSpinData({userId, betAmount, freeSpinId, freeSpinCount, freeSpinTotalCount, totalWinAmount, accumulatedMultiplier, freeSpinCompleted}) {
+        const data = {
+            betAmount,
+            freeSpinId,
+            freeSpinCount,
+            freeSpinTotalCount,
+            totalWinAmount,
+            accumulatedMultiplier,
+            freeSpinCompleted,
+            hasFreeSpinCalcuated : true
+        }
+        await redisClient.set(`freespin:player:${userId}`, JSON.stringify(data));
+    }
+
+    async deleteFreeSpinStatus(userId) {
+        await redisClient.del(`freespin:player:${userId}`);
+    }
+
     async setWildMap(userId, wildMap) {
         await redisClient.set(`wild:player:${userId}`, JSON.stringify({map : wildMap}))
     }

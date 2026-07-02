@@ -123,12 +123,16 @@ class GameEngine {
 
         let shouldTumble = true;
 
+        let shouldStartFreeSpin = {
+            base : (board.filter(symbol => symbol === this.gameConfig.symbolName.SCATTER).length >= this.gameConfig.freespin.base.count),
+            additional: (board.filter(symbol => symbol === this.gameConfig.symbolName.SCATTER).length >= this.gameConfig.freespin.additional.count)
+        };
+
         // const multiplierPayoutStack = Array(this.gameConfig.reels).fill([]);
         const multiplierPayoutStack = Array.from({ length: this.gameConfig.reels }, () => []);
 
 
         await handleMultiplierPayoutStack({board, multiplierPayoutStack, clientSeed, serverSeed, nonce, tumbleIndex: tumbles});
-
 
 
 
@@ -146,6 +150,12 @@ class GameEngine {
                 boardState.push({board, matchSymbol: Array.from(winSymbol.entries()).map(([name, count]) => ({name, count}))});
                 board = newBoard;
 
+                // check if the new board has enough scatter symbols to trigger free spins
+                shouldStartFreeSpin = {
+                    base : (board.filter(symbol => symbol === this.gameConfig.symbolName.SCATTER).length >= this.gameConfig.freespin.base.count),
+                    additional: (board.filter(symbol => symbol === this.gameConfig.symbolName.SCATTER).length >= this.gameConfig.freespin.additional.count)
+                };
+
                 await handleMultiplierPayoutStack({board, multiplierPayoutStack, clientSeed, serverSeed, nonce, tumbleIndex: tumbles});
 
             } else {
@@ -158,7 +168,8 @@ class GameEngine {
         return {
             boardState,
             tumbles,
-            multiplierPayoutStack
+            multiplierPayoutStack,
+            shouldStartFreeSpin
         }
 
 
