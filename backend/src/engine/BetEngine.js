@@ -51,7 +51,7 @@ class BetEngine {
 
             const {name : symbolName, count : symbolCount}  = winSymbol[i];
 
-            if(!this.gameConfig.symbolName.hasOwnProperty(symbolName)) throw new Error(`Invalid symbol name ${symbolName} in winSymbol array`);
+            if(!this.gameConfig.symbols.hasOwnProperty(symbolName)) throw new Error(`Invalid symbol name ${symbolName} in winSymbol array`);
 
             const symbolConfig = this.gameConfig.symbols[symbolName];
             const payoutConfig = symbolConfig.payout;
@@ -129,7 +129,7 @@ class BetEngine {
                     ...freeSpinStatus,
                     freeSpinTotalCount : Number(freeSpinStatus.freeSpinTotalCount) + ((shouldAdditionalFreeSpin) ? this.gameConfig.freespin.additiona.spin : 0),
                     freeSpinCount : Number(freeSpinStatus.freeSpinCount) + 1,
-                    totalWinAmount : Number(freeSpinStatus.freeSpinCount) + winAmount,
+                    totalWinAmount : Number(freeSpinStatus.totalWinAmount) + winAmount,
                     accumulatedMultiplier: Number(freeSpinStatus.accumulatedMultiplier) + totalMultiplierPayout,
                     freeSpinCompleted : Number(freeSpinStatus.freeSpinCount + 1) >= Number(freeSpinStatus.freeSpinTotalCount),
 
@@ -157,7 +157,7 @@ class BetEngine {
                         freeSpinCompleted : false
                     }
 
-                    await this.databaseManager(freeSpinData);
+                    await this.databaseManager.setFreeSpinData(freeSpinData);
                 }
 
             }
@@ -189,7 +189,7 @@ class BetEngine {
 
             // if free spin is not active, then we need to deduct the bet amount from the user's balance
             await Promise.all([
-                this.databaseManager.createTransaction({ userId, betAmount, roundId, transactionId }),
+                this.databaseManager.createTransaction({ userId, betAmount : betAmountNum.toFixed(2), roundId, transactionId }),
                 (freeSpinStatus?.hasFreeSpinStarted) ? null : this.databaseManager.updateBalance({ userId, balance: (currentUserBalance - betAmountNum).toFixed(2) }),
             ]);
 
@@ -199,7 +199,7 @@ class BetEngine {
             const payout = this.organizeRespone({ boardState, tumbles, multiplierPayoutStack });
             
             // if free spin is active, then we need to update the free spin status with the new accumulated multiplier and total win amount
-            const freeSpinMultiplier = (freeSpinStatus.hasFreeSpinStarted) ? (freeSpinStatus.accumulatedMultiplier + payout.totalMultiplierPayout) : 1;
+            const freeSpinMultiplier = (freeSpinStatus?.hasFreeSpinStarted) ? (freeSpinStatus.accumulatedMultiplier + payout.totalMultiplierPayout) : 1;
 
             const winAmount = payout.totalWinMultiplier * betAmountNum * freeSpinMultiplier;
             const balanceAfterBetAmountDeduction = await this.databaseManager.getBalance({ userId });
