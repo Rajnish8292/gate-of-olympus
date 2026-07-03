@@ -46,6 +46,9 @@ class GameEngine {
         return board
     }
 
+
+
+
     /*
      * Function to check if the board has any winning symbol and cascade the board
     * @params {string []} board -> array of symbol names of size 30.
@@ -128,7 +131,6 @@ class GameEngine {
             additional: (board.filter(symbol => symbol === this.gameConfig.symbolName.SCATTER).length >= this.gameConfig.freespin.additional.count)
         };
 
-        // const multiplierPayoutStack = Array(this.gameConfig.reels).fill([]);
         const multiplierPayoutStack = Array.from({ length: this.gameConfig.reels }, () => []);
 
 

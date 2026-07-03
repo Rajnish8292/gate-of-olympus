@@ -12,6 +12,8 @@
 | POST | /api/auth/forgot-password | Send password reset link |
 | POST | /api/auth/reset-password | Reset password using token |
 
+
+
 ---
 
 ## Wallet
@@ -31,8 +33,7 @@
 |--------|----------|-------------|------|
 | POST | /api/game/spin | Start a spin round | betAmount, clientSeed? |
 | POST | /api/game/buy-feature | Buy bonus feature | betAmount |
-| GET | /api/game/round/:roundId | Get round details with history | — |
-| GET | /api/game/verify/:roundId | Verify provably fair result | — |
+| GET |  /api/game/round/:roundId | Get round details with history | — |
 | POST | /api/game/seed/rotate | Rotate server seed | — |
 
 ---

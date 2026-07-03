@@ -51,7 +51,7 @@ const spin = async (req, res) => {
 
 
     } catch(err) {
-        res.status(500).json({message : "Internal server error.", error: err})
+        res.status(500).json({message : err.message})
 
     }
 

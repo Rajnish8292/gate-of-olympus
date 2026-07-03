@@ -4,6 +4,8 @@ const transaction = require("../models/transaction")
 const user = require("../models/user")
 const history = require("../models/history")
 
+const reconcilition = require("../models/reconcilition")
+
 
 
 
@@ -150,10 +152,16 @@ log(type, userId, data = {}) {
     }
 
     async completeTransaction({userId, transactionId}) {
-        this.log("COMPLETE_TRANSACTION", userId)
         await transaction.updateOne(
             {userId, transactionId},
             {status : "completed"}
+        )
+    }
+
+    async failTransaction({userId, transactionId}) {
+        await transaction.updateOne(
+            {userId, transactionId},
+            {status : "failed"}
         )
     }
     async getBalance({userId}) {
@@ -164,6 +172,16 @@ log(type, userId, data = {}) {
     async getProfile({userId}) {
         const document = await user.findOne({userId})
         return document
+    }
+
+    async getUserHistory({userId}) {
+        const histories = await history.find({userId});
+        return histories;
+    }
+
+    async getuserTransaction({userId}) {
+        const transactions = await transaction.find({userId});
+        return transactions;
     }
 
     async updateBalance({userId, balance}) {
@@ -184,6 +202,17 @@ log(type, userId, data = {}) {
             transactionId,
             currency,
             createdAt : Date.now().toString()
+        })
+    }
+
+    async flagForReconciliation({userId, transactionId, roundId, reason,originalBalance, expectedBalance }) {
+        await reconcilition.create({
+            userId,
+            transactionId,
+            roundId,
+            reason,
+            originalBalance,
+            expectedBalance
         })
     }
 

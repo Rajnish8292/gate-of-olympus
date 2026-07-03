@@ -1,8 +1,6 @@
 const crypto = require("crypto")
 
-const {
-  SYMBOLS
-} = require("../constant/symbol")
+
 
 const { gameConfig } = require("../constant/game")
 
