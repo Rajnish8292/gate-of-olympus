@@ -26,14 +26,14 @@ const gameConfig = {
         HOURGLASS:  { probability: 0.0546, payout: {"8_9": 2.5,  "10_11": 10,   "12_30": 25} },
         RING:       { probability: 0.0636, payout: {"8_9": 2,    "10_11": 5,    "12_30": 15} },
         GOBLET:     { probability: 0.0772, payout: {"8_9": 1.5,  "10_11": 2,    "12_30": 12} },
-
-        REDGEM:     { probability: 0.1182, payout: {"8_9": 1,    "10_11": 1.5,  "12_30": 10} },
+        //0.1182
+        REDGEM:     { probability: 0.0136, payout: {"8_9": 1,    "10_11": 1.5,  "12_30": 10} },
         PURPLEGEM:  { probability: 0.1318, payout: {"8_9": 0.80, "10_11": 1.20, "12_30": 8} },
         YELLOWGEM:  { probability: 0.1455, payout: {"8_9": 0.50, "10_11": 1,    "12_30": 5} },
         GREENGEM:   { probability: 0.1591, payout: {"8_9": 0.4,  "10_11": 0.9,  "12_30": 4} },
         BLUEGEM:    { probability: 0.1818, payout: {"8_9": 2,    "10_11": 0.75, "12_30": 2} },
-
-        SCATTER:    { probability: 0.0136, payout: {"6_30": 100,  "5_5": 5,      "4_4": 3} },
+        //0.0136
+        SCATTER:    { probability: 0.1182, payout: {"6_30": 100,  "5_5": 5,      "4_4": 3} },
         MULTIPLIER: { probability: 0.0136, payout: {"1_30": 1} }
     },
 
@@ -56,7 +56,7 @@ const gameConfig = {
     },
 
     freespin: {
-        base : {spin : 15, count : 4}, // if 3 or more scatter appears, then give 15 free spin with 5x multiplier
+        base : {spin : 15, count : 1}, // if 4 or more scatter appears, then give 15 free spin with 5x multiplier
         additional: {spin: 4, count: 3}, // if 3 or more scatter appears in free spin, then give 4 additional free spin with 3x multiplier
     }, 
 

@@ -123,24 +123,33 @@ class BetEngine {
     async handleFreeSpinUpdate(userId, betAmount, freeSpinStatus, totalMultiplierPayout, winAmount,shouldStartBaseFreeSpin, shouldAdditionalFreeSpin) {
             // handle update for free spin data if it started
             let finalData = null;
-            if(freeSpinStatus?.hasFreeSpinStarted) {
-                
-                const updatedfreeSpinData = {
-                    ...freeSpinStatus,
-                    freeSpinTotalCount : Number(freeSpinStatus.freeSpinTotalCount) + ((shouldAdditionalFreeSpin) ? this.gameConfig.freespin.additiona.spin : 0),
-                    freeSpinCount : Number(freeSpinStatus.freeSpinCount) + 1,
-                    totalWinAmount : Number(freeSpinStatus.totalWinAmount) + winAmount,
-                    accumulatedMultiplier: Number(freeSpinStatus.accumulatedMultiplier) + totalMultiplierPayout,
-                    freeSpinCompleted : Number(freeSpinStatus.freeSpinCount + 1) >= Number(freeSpinStatus.freeSpinTotalCount),
 
-                }
+            if(freeSpinStatus?.hasFreeSpinStarted) {
+
+            const newCount = Number(freeSpinStatus.freeSpinCount) + 1;
+            const additionalSpins = shouldAdditionalFreeSpin ? this.gameConfig.freespin.additional.spin : 0;
+            const newTotalCount = Number(freeSpinStatus.freeSpinTotalCount) + additionalSpins;
+
+            const updatedfreeSpinData = {
+                ...freeSpinStatus,
+                userId, // because data free spin data we stored in redis do not contain userId so we have to manually add userId , check database Manager to fully understand
+                freeSpinTotalCount: newTotalCount,
+                freeSpinCount: newCount,
+                totalWinAmount: Number(freeSpinStatus.totalWinAmount) + winAmount,
+                accumulatedMultiplier: Number(freeSpinStatus.accumulatedMultiplier) + totalMultiplierPayout,
+                freeSpinCompleted: newCount >= newTotalCount,
+            };
+
+                // console.log(updatedfreeSpinData);
 
                 finalData = updatedfreeSpinData
 
+
                 // if free
-                if(updatedfreeSpinData.freeSpinCount >= freeSpinStatus.freeSpinTotalCount) {
+                if(updatedfreeSpinData.freeSpinCount >= updatedfreeSpinData.freeSpinTotalCount) {
                     await this.databaseManager.deleteFreeSpinStatus(userId)
                 } else {
+                    
                     await this.databaseManager.setFreeSpinData(updatedfreeSpinData)
                 }
             } else {
@@ -149,6 +158,7 @@ class BetEngine {
                 if(shouldStartBaseFreeSpin) {
                     const freeSpinData = {
                         userId,
+                        freeSpinId: "",
                         betAmount,
                         freeSpinCount : 0,
                         freeSpinTotalCount : this.gameConfig.freespin.base.spin,
@@ -158,6 +168,10 @@ class BetEngine {
                     }
 
                     await this.databaseManager.setFreeSpinData(freeSpinData);
+
+                    return {
+                        isFreeSpinTriggered: true
+                    }
                 }
 
             }
@@ -192,6 +206,8 @@ class BetEngine {
         
         const currentUserBalance = getBalanceResult.value;
         const freeSpinStatus = freeSpinStatusResult.value;
+
+
 
         // handle rejected promise
         if(getBalanceResult.status === "rejected") throw new Error(`Unable to fetch balance for ${userId}`)
@@ -273,6 +289,8 @@ class BetEngine {
             
             // if free spin is active, then we need to update the free spin status with the new accumulated multiplier and total win amount
             const freeSpinMultiplier = (freeSpinStatus?.hasFreeSpinStarted) ? (freeSpinStatus.accumulatedMultiplier + payout.totalMultiplierPayout) : 1;
+
+
             const winAmount = payout.totalWinMultiplier * betAmountNum * freeSpinMultiplier;
 
             const balanceAfterBetAmountDeduction = await this.databaseManager.getBalance({ userId });
@@ -336,7 +354,8 @@ class BetEngine {
                 },
                 
                 boardInfo : {...payout},
-                freeSpin : freeSpinData
+                freeSpin : freeSpinData,
+                hasFreeSpinTriggered: shouldStartFreeSpin.base
                 
             };
         } 

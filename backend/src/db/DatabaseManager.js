@@ -127,8 +127,11 @@ log(type, userId, data = {}) {
             totalWinAmount,
             accumulatedMultiplier,
             freeSpinCompleted,
-            hasFreeSpinCalcuated : true
+            hasFreeSpinStarted : true
         }
+
+
+        console.log(data)
         await redisClient.set(`freespin:player:${userId}`, JSON.stringify(data));
     }
 

@@ -32,10 +32,5 @@ walletRoutes.post("/withdrawal", withdrawal)
 walletRoutes.get("/history", getHistory)
 walletRoutes.get("/transaction", getTransactions)
 
-// walletRoutes.post("/bet", spin)
-// walletRoutes.get("/newBoard", newBoard)
-// walletRoutes.get("/profile", getProfile)
-
-
 
 module.exports = walletRoutes
